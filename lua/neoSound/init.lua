@@ -1,31 +1,34 @@
 local M = {}
 local default_provider = "local"
+local builtin_field = {formatted = true}
 
-local import_sound = {
+local play_sound = {
    ["local"] = function(sound) -- local file
    end,
    ["youtube"] = function(sound) end,
-   ["spotify"] = function(sound) end
+   ["soundcloud"] = function(sound) end
 }
 
 function M.setup(soundpacks)
    if soundpacks == nill then return end
-   for soundpack_index = 1, #soundpacks do
-      local soundpack = soundpacks[soundpack_index]
-      local sounds = soundpack["sounds"]
-
-      for sound_index = 1, #sounds do
-         local sound = sounds[sound_index]
-	      if soundpack["provider"] == nil then
-	         soundpack["provider"] = default_provider
-         end
-         import_sound[soundpack["provider"]](sound)
-      end
-   end
+   vim.g.soundpacks = soundpacks
 end
 
 function M.get_sounds()
-   return 
+   soundpacks = vim.g.soundpacks
+   if soundpacks.formatted == nil then 
+      soundpacks.formatted = ""
+      for spname, soundpack in pairs(soundpacks) do
+         if builtin_field[spname] then goto continue end
+         soundpacks.formatted = soundpacks.formatted .. spname .. ": \n\n"
+         for sname, sound in pairs(soundpack) do 
+            soundpacks.formatted = soundpacks.formatted .. sname .. ": " .. sound .. "\n"
+         end
+         ::continue::
+      end
+      vim.g.soundpacks = soundpacks
+   end
+   print(vim.g.soundpacks.formatted)
 end
 
 function M.choose_sound(sound)
