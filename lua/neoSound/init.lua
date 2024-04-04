@@ -35,4 +35,8 @@ function M.play(playble)
    return
 end
 
+function M.skip(amount)
+   return
+end
+
 return M
