@@ -1,6 +1,6 @@
 local M = {}
 local default_provider = "local"
-local builtin_field = {formatted = true}
+local builtin_fields = {formatted = true}
 
 local play_sound = {
    ["local"] = function(sound) -- local file
@@ -19,7 +19,7 @@ function M.get_sounds()
    if soundpacks.formatted == nil then 
       soundpacks.formatted = ""
       for spname, soundpack in pairs(soundpacks) do
-         if builtin_field[spname] then goto continue end
+         if builtin_fields[spname] then goto continue end
          soundpacks.formatted = soundpacks.formatted .. spname .. ": \n\n"
          for sname, sound in pairs(soundpack) do 
             soundpacks.formatted = soundpacks.formatted .. sname .. ": " .. sound .. "\n"
@@ -31,7 +31,7 @@ function M.get_sounds()
    print(vim.g.soundpacks.formatted)
 end
 
-function M.choose_sound(sound)
+function M.play(playble)
    return
 end
 
