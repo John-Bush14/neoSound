@@ -4,17 +4,37 @@ local builtin_fields = {formatted = true, opts = true, waitlist = true}
 local default_repeat = 0
 local defaults_shuffle = false
 
-local play_sound = {
+local prepare_sound = {
    ["local"] = function(sound) -- local file
-      local mpv_cmd = "FloatermNew! --name=test --autoclose=1 --silent mpv " .. sound
+      return sound
    end,
-   ["youtube.com"] = function(sound) end,
+   ["youtube.com"] = function(sound)
+   end,
    ["soundcloud.com"] = function(sound) end
 }
 
+function prepare(soundpacks)
+   for soundpackn, soundpack in pairs(soundpacks) do 
+      if builtin_fields(soundpackn) then goto continue_soundpack end
+      for soundn, sound in pairs(soundpack) do 
+         if builting_fields(soundn) then goto continue_sound end
+         for type_substr, prepare_func in pairs(prepare_sound) do
+            if string.find(sound, type_substr) ~= nil then
+               soundpacks[soundpackn][soundn] = prepare_func(sound)         
+            end
+         end
+         soundpacks[soundpackn][soundn] = prepare_sound["local"](sound)         
+
+         ::continue_sound::
+      end
+      ::continue_soundpack::
+   end
+   return soundpacks
+end
+
 function M.setup(soundpacks)
    if soundpacks == nill then return end
-   vim.g.soundpacks = soundpacks
+   vim.g.soundpacks = prepare(soundpacks)
    opts = soundpacks.opts
    vim.g["repeat"] = opts["repeat"] or default_repeat --repeat is a keyword :'(
    vim.g.shuffle = opts.shuffle or default_shuffle
@@ -55,7 +75,7 @@ function table.len(tbl)
     return count
 end
 
-function M.play(playable)
+function M.play_user(playable)
    if playable == "cur" then
       playable = vim.g.cur_soundp.waitlist[tostring(vim.g.cur_soundp.waitlist.index)]
    end
@@ -87,17 +107,21 @@ function M.play(playable)
       if sound == nil then
          sound = playable
       end
-      local mpv_cmd
-      for type, play_func in pairs(play_sound) do
-         if string.find(sound, type_substr) ~= nil then
-            mpv_cmd = play_func(sound)
-            return false
-         end
-      end
-      mpv_cmd = play_sound["local"](sound)
-
-      vim.cmd(mpv_cmd .. " --no-video")
+      play_backend(sound)
    end
+end
+
+function play_backend(sound, video)   
+   local cmd
+   if type(sound) == "table" then
+      sound = sound[{[false] = "audio", [true] = "video"}[video]]
+   end
+   if not video then
+      cmd = "FloatermNew! --name=audio --autoclose=1 --silent mpv --no-video " .. sound
+   else
+      cmd = "FloatermNew! --name=video --autoclose=1 --silent mpv --no-audio " .. sound
+   end
+   vim.cmd(sound_playable)
 end
 
 function M.skip(amount)
