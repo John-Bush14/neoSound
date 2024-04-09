@@ -15,9 +15,9 @@ local prepare_sound = {
 
 function prepare(soundpacks)
    for soundpackn, soundpack in pairs(soundpacks) do 
-      if builtin_fields(soundpackn) then goto continue_soundpack end
+      if builtin_fields[soundpackn] then goto continue_soundpack end
       for soundn, sound in pairs(soundpack) do 
-         if builting_fields(soundn) then goto continue_sound end
+         if builtin_fields[soundn] then goto continue_sound end
          for type_substr, prepare_func in pairs(prepare_sound) do
             if string.find(sound, type_substr) ~= nil then
                soundpacks[soundpackn][soundn] = prepare_func(sound)         
@@ -114,14 +114,14 @@ end
 function play_backend(sound, video)   
    local cmd
    if type(sound) == "table" then
-      sound = sound[{[false] = "audio", [true] = "video"}[video]]
+	sound = (video and "video") or "audio" --credits to chatgpt?
    end
    if not video then
       cmd = "FloatermNew! --name=audio --autoclose=1 --silent mpv --no-video " .. sound
    else
       cmd = "FloatermNew! --name=video --autoclose=1 --silent mpv --no-audio " .. sound
    end
-   vim.cmd(sound_playable)
+   vim.cmd(cmd)
 end
 
 function M.skip(amount)
