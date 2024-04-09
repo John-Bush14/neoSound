@@ -98,7 +98,7 @@ function M.play_user(playable)
  
       waitlist[tostring(table.len(waitlist)+1)] = "END"
       playable = waitlist["1"]
-      waitlist.index = 0
+      waitlist.index = 1
       soundp.waitlist = waitlist
       vim.g.cur_soundp = soundp
    end
@@ -107,6 +107,7 @@ function M.play_user(playable)
       if sound == nil then
          sound = playable
       end
+      vim.g.cur_soundp.waitlist.index = tonumber(table.find(vim.g.cur_soundp.waitlist, sound))
       play_backend(sound)
    end
 end
@@ -114,7 +115,7 @@ end
 function play_backend(sound, video)   
    local cmd
    if type(sound) == "table" then
-	sound = (video and "video") or "audio" --credits to chatgpt?
+	   sound = (video and "video") or "audio" --credits to chatgpt?
    end
    if not video then
       cmd = "FloatermNew! --name=audio --autoclose=1 --silent mpv --no-video " .. sound
@@ -129,6 +130,10 @@ function M.skip(amount)
    if vim.g.cur_soundp.waitlist[tostring(vim.g.cur_soundp.waitlist.index)] == "END" or vim.g.cur_soundp.waitlist[tostring(vim.g.cur_soundp.waitlist.index)] == nil then
       vim.g.cur_soundp.waitlist.index = 0
    end
+end
+
+function M.video() 
+   play_backend(vim.g.cur_soundp.waitlist[tostring(vim.g.cur_soundp.waitlist.index)], true)
 end
 
 return M
