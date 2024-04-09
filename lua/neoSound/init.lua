@@ -5,15 +5,11 @@ local default_repeat = 0
 local defaults_shuffle = false
 
 local play_sound = {
-   ["local"] = function(sound, video) -- local file
+   ["local"] = function(sound) -- local file
       local mpv_cmd = "FloatermNew! --name=test --autoclose=1 --silent mpv " .. sound
-      if !video then
-         mpv_cmd = mpv_cmd .. " ao"
-      end
-      vim.cmd(mpv_cmd)
    end,
-   ["youtube.com"] = function(sound, video) end,
-   ["soundcloud.com"] = function(sound, video) end
+   ["youtube.com"] = function(sound) end,
+   ["soundcloud.com"] = function(sound) end
 }
 
 function M.setup(soundpacks)
@@ -91,13 +87,16 @@ function M.play(playable)
       if sound == nil then
          sound = playable
       end
+      local mpv_cmd
       for type, play_func in pairs(play_sound) do
          if string.find(sound, type_substr) ~= nil then
-            play_func(sound)
+            mpv_cmd = play_func(sound)
             return false
          end
       end
-      play_sound["local"](sound)
+      mpv_cmd = play_sound["local"](sound)
+
+      vim.cmd(mpv_cmd .. " --no-video")
    end
 end
 
