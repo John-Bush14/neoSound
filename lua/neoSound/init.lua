@@ -24,7 +24,6 @@ function prepare(soundpacks)
             end
          end
          soundpacks[soundpackn][soundn] = prepare_sound["local"](sound)         
-
          ::continue_sound::
       end
       ::continue_soundpack::
@@ -95,7 +94,7 @@ function M.play_user(playable)
       end 
       waitlist = soundp
       ::shuffleskip::
- 
+
       waitlist[tostring(table.len(waitlist)+1)] = "END"
       playable = waitlist["1"]
       waitlist.index = 1
@@ -107,20 +106,37 @@ function M.play_user(playable)
       if sound == nil then
          sound = playable
       end
-      vim.g.cur_soundp.waitlist.index = tonumber(table.find(vim.g.cur_soundp.waitlist, sound))
+      local cur_soundp = vim.g.cur_soundp
+      local waitlist = cur_soundp.waitlist
+      waitlist.index = tonumber(table.find(waitlist, sound))
+      waitlist.start_time = time()
+      cur_soundp.waitlist = waitlist
+      vim.g.cur_soundp = cur_soundp
+      print(vim.inspect(vim.g.cur_soundp.waitlist))
       play_backend(sound)
    end
 end
 
-function play_backend(sound, video)   
+function time() 
+   return tonumber(vim.fn.strftime("%H%M%S"))
+end
+
+function play_backend(sound, video, time)   
    local cmd
    if type(sound) == "table" then
-	   sound = (video and "video") or "audio" --credits to chatgpt?
+	   local audio = sound.audio
+      local video = sound.video
+      sound = nil
    end
    if not video then
-      cmd = "FloatermNew! --name=audio --autoclose=1 --silent mpv --no-video " .. sound
+      vim.cmd("FloatermKill audio")
+      cmd = "FloatermNew! --name=audio --autoclose=1 --silent mpv --no-video " .. sound or audio
    else
-      cmd = "FloatermNew! --name=video --autoclose=1 --silent mpv --no-audio " .. sound
+      vim.cmd("FloatermKill video")
+      vim.cmd("FloatermKill audio")
+      cmd = "FloatermNew! --name=video --autoclose=1 --silent mpv --no-audio --start=+" .. time .. " " .. sound or video
+      vim.cmd(cmd)
+      cmd = "FloatermNew! --name=audio --autoclose=1 --silent mpv --no-video --start=+" .. time .. " " .. sound or audio  
    end
    vim.cmd(cmd)
 end
@@ -133,7 +149,8 @@ function M.skip(amount)
 end
 
 function M.video() 
-   play_backend(vim.g.cur_soundp.waitlist[tostring(vim.g.cur_soundp.waitlist.index)], true)
+   print(time(), vim.g.cur_soundp.waitlist.start_time)
+   play_backend(vim.g.cur_soundp.waitlist[tostring(vim.g.cur_soundp.waitlist.index)], true, time() - vim.g.cur_soundp.waitlist.start_time)
 end
 
 return M
