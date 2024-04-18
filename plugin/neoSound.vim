@@ -10,3 +10,5 @@ command! -nargs=1 Shuffle let g:shuffle = <args>
 command! -nargs=1 Repeat let g:repeat = <args>
 command! -nargs=1 Help lua print("<f-args>")
 command! -nargs=0 Vid lua require("neoSound").video()
+command! -nargs=0 Pause lua require("neoSound").pause(true)
+command! -nargs=0 Unpause lua require("neoSound").pause(false)
